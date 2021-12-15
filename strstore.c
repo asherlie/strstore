@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <assert.h>
+
+#include "strstore.h"
 /*
 this is maybe applicable to varedit, for example
 an easily indexable string storage that has some overhead
@@ -25,14 +27,6 @@ is completed at that node
 
 we can also hae an array of pointers to each word node
 
-struct str_node{
-    int* chars;
-    struct str_node* next;
-};
-
-struct str_store{
-    int cap;
-};
 */
 
 uint64_t bytes_allocated = 0;
@@ -46,23 +40,6 @@ void* _Calloc(int nbytes, int sz){
     bytes_allocated += nbytes*sz;
     return calloc(nbytes, sz);
 }
-
-struct st_node{
-    char c;
-    /* number of strings that finish here */
-    int complete;
-    int n_children;
-    /*struct st_node* next;*/
-    // could just do proof of concept with lowcase chars, 26 children
-    struct st_node* parent;
-    struct st_node** children;
-};
-
-struct str_tree{
-    /*int n_roots;*/
-    /*struct st_node** roots;*/
-    struct st_node* root;
-};
 
 void init_sn(struct st_node* sn, char c){
     sn->n_children = 177;
@@ -164,32 +141,8 @@ void free_sn(struct st_node* sn){
     /*puts("frei");*/
     free(sn->children);
 }
+
 void free_str(struct str_tree* st){
     free_sn(st->root);
-}
-
-int main(int a, char** b){
-    struct str_tree st;
-    struct st_node* sn;
-    FILE* fp;
-    int br;
-    size_t sz = 0;
-    char* word = NULL;
-    if(a < 2)return 1;
-    fp = fopen(b[1], "r");
-    init_st(&st);
-    while((br = getline(&word, &sz, fp)) != EOF){
-        word[--br] = 0;
-        insert_st(&st, word);
-    }
-    fclose(fp);
-    /*p_tree(&st);*/
-    printf("used %li bytes total\n", bytes_allocated);
-    while((br = getline(&word, &sz, stdin))){
-        if(*word == '\\')break;
-        word[--br] = 0;
-        if(!(sn = filter_str(&st, word)))continue;
-        p_full_node(sn, 0, word);
-    }
-    free_str(&st);
+    free(st->root);
 }
